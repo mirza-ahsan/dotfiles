@@ -1,5 +1,5 @@
 #!/bin/bash
-# lib.sh — Shared utility functions for dotfiles installation scripts.
+# lib.sh — Shared utility functions for configs installation scripts.
 # Source this file at the top of every script:
 #   SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   source "$SCRIPTS_DIR/lib.sh"
@@ -27,9 +27,9 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Back up an existing file or directory to ~/.dotfiles-backup/<timestamp>/
+# Back up an existing file or directory to ~/.configs-backup/<timestamp>/
 # Usage: backup_if_exists /path/to/file
-BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="$HOME/.configs-backup/$(date +%Y%m%d_%H%M%S)"
 backup_if_exists() {
     local target="$1"
     # Only back up real files/dirs, not existing symlinks

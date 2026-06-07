@@ -1,4 +1,4 @@
-# Dotfiles & System Setup
+# Configs & System Setup
 
 This repository contains my personal configurations (Hyprland, Neovim, Tmux, Zsh, etc.) and automation scripts to set up a fresh Arch Linux environment from scratch.
 
@@ -8,10 +8,10 @@ To get everything installed—including AUR helpers, essential apps, SSH keys, a
 
 ```bash
 # 1. Clone the repository to your home folder
-git clone https://github.com/mirza-ahsan/dotfiles.git
+git clone https://github.com/mirza-ahsan/configs.git
 
 # 2. Enter the directory
-cd ~/dotfiles
+cd ~/configs
 
 # 3. Make the master script executable
 chmod +x master-installation.sh
@@ -50,14 +50,14 @@ The `master-installation.sh` handles the heavy lifting in two phases:
 6.  **Config:** Everything in `config/` is mirrored file-by-file into `~/.config/` via symlinks.
 7.  **Home:** Everything in `home/` is symlinked directly into `~/` (e.g., `.zshrc`, `.tmux.conf`).
 
-> **Backups:** If any existing real files are found at the target locations, they are automatically backed up to `~/.dotfiles-backup/<timestamp>/` before being replaced with symlinks.
+> **Backups:** If any existing real files are found at the target locations, they are automatically backed up to `~/.configs-backup/<timestamp>/` before being replaced with symlinks.
 
 ---
 
 ## Repository Structure
 
 ```
-dotfiles/
+configs/
 ├── config/             # → symlinked to ~/.config/
 │   └── nvim/           #   Full Neovim config (init.lua, plugins, keymaps)
 ├── home/               # → symlinked to ~/
@@ -81,7 +81,7 @@ dotfiles/
 ## Adding New Configs
 
 - **~/.config/ files:** Place them under `config/` mirroring the path (e.g., `config/hypr/hyprland.conf` → `~/.config/hypr/hyprland.conf`).
-- **Home dotfiles:** Place them under `home/` (e.g., `home/.gitconfig` → `~/.gitconfig`).
+- **Home configs:** Place them under `home/` (e.g., `home/.gitconfig` → `~/.gitconfig`).
 
 Run the master script again (or with `--link-only`) to deploy.
 

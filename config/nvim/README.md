@@ -65,7 +65,7 @@ cp -r nvim ~/.config/nvim
 Or if you're cloning from a git repo:
 
 ```bash
-git clone https://github.com/mirza-ahsan/dotfiles.git ~/.config/nvim
+git clone https://github.com/mirza-ahsan/configs.git ~/.config/nvim
 ```
 
 ### Step 3 — Remove Old Plugin Data (Clean Slate)

@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-# ── Resolve dotfiles root reliably (works no matter where you run this from) ──
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# ── Resolve configs root reliably (works no matter where you run this from) ───
+CONFIGS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Source shared library ─────────────────────────────────────────────────────
-source "$DOTFILES_DIR/scripts/lib.sh"
+source "$CONFIGS_DIR/scripts/lib.sh"
 
 # ── Parse flags ───────────────────────────────────────────────────────────────
 LINK_ONLY=false
@@ -35,17 +35,17 @@ done
 echo ""
 echo -e "${BOLD}${CYAN}"
 echo "  ┌──────────────────────────────────────┐"
-echo "  │       Dotfiles Master Installer       │"
+echo "  │        Configs Master Installer       │"
 echo "  └──────────────────────────────────────┘"
 echo -e "${RESET}"
-log_info "Dotfiles directory: ${BOLD}$DOTFILES_DIR${RESET}"
+log_info "Configs directory: ${BOLD}$CONFIGS_DIR${RESET}"
 if $LINK_ONLY; then
     log_warn "Running in ${BOLD}--link-only${RESET} mode. Skipping all installations."
 fi
 echo ""
 
 # ── Make all scripts executable ───────────────────────────────────────────────
-chmod +x "$DOTFILES_DIR/scripts/"*.sh
+chmod +x "$CONFIGS_DIR/scripts/"*.sh
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  PHASE 1: Package Installation (skipped with --link-only)
@@ -54,22 +54,22 @@ chmod +x "$DOTFILES_DIR/scripts/"*.sh
 if ! $LINK_ONLY; then
 
     # ── 1a. AUR Helpers ───────────────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/aur.sh"
+    bash "$CONFIGS_DIR/scripts/aur.sh"
 
     # ── 1b. Crucial Applications ──────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/crucial-apps.sh"
+    bash "$CONFIGS_DIR/scripts/crucial-apps.sh"
 
     # ── 1c. Neovim & Dependencies ─────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/nvim.sh"
+    bash "$CONFIGS_DIR/scripts/nvim.sh"
 
     # ── 1d. Zsh & Oh My Zsh ──────────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/zsh.sh"
+    bash "$CONFIGS_DIR/scripts/zsh.sh"
 
     # ── 1e. Tmux & TPM ───────────────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/tmux.sh"
+    bash "$CONFIGS_DIR/scripts/tmux.sh"
 
     # ── 1f. GitHub SSH Key ────────────────────────────────────────────────────
-    bash "$DOTFILES_DIR/scripts/github.sh"
+    bash "$CONFIGS_DIR/scripts/github.sh"
 
 fi
 
@@ -83,20 +83,20 @@ log_section "Symlinking config/ → ~/.config/"
 CONFIG_COUNT=0
 while IFS= read -r file; do
     # Get the relative path (e.g., nvim/init.lua)
-    rel_path="${file#$DOTFILES_DIR/config/}"
+    rel_path="${file#$CONFIGS_DIR/config/}"
     target_path="$HOME/.config/$rel_path"
 
     create_symlink "$file" "$target_path"
     ((++CONFIG_COUNT))
-done < <(find "$DOTFILES_DIR/config" -type f)
+done < <(find "$CONFIGS_DIR/config" -type f)
 
 log_success "Linked ${BOLD}$CONFIG_COUNT${RESET} config files."
 
-# ── 2b. Home dotfiles: home/* → ~/* ──────────────────────────────────────────
+# ── 2b. Home configs: home/* → ~/* ────────────────────────────────────────────
 log_section "Symlinking home/ → ~/"
 
 HOME_COUNT=0
-for item in "$DOTFILES_DIR/home/"* "$DOTFILES_DIR/home/".*; do
+for item in "$CONFIGS_DIR/home/"* "$CONFIGS_DIR/home/".*; do
     # Skip if glob didn't match anything
     [ -e "$item" ] || continue
 
@@ -111,7 +111,7 @@ for item in "$DOTFILES_DIR/home/"* "$DOTFILES_DIR/home/".*; do
     ((++HOME_COUNT))
 done
 
-log_success "Linked ${BOLD}$HOME_COUNT${RESET} home dotfiles."
+log_success "Linked ${BOLD}$HOME_COUNT${RESET} home configs."
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Done!
