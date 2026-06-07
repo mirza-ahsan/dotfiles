@@ -1,21 +1,23 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
-echo "Installing/Updating zen-browser..."
-paru -S --noconfirm --needed zen-browser-bin
-echo "Zen installed successfully."
+# ── Source shared library ─────────────────────────────────────────────────────
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPTS_DIR/lib.sh"
 
-echo "Installing/Updating ghostty..."
-paru -S --noconfirm --needed ghostty
-echo "Ghostty installed successfully."
+log_section "Crucial Applications"
 
-echo "Installing/Updating VS Code..."
-paru -S --noconfirm --needed visual-studio-code-bin
-echo "VS Code installed successfully."
+# Define all packages in a single array for clean management.
+# Add or remove packages here as needed.
+PACKAGES=(
+    zen-browser-bin
+    ghostty
+    visual-studio-code-bin
+    yazi
+    cmake
+)
 
-echo "Installing/Updating Yazi..."
-paru -S --noconfirm --needed yazi
-echo "Yazi installed successfully."
+log_info "Installing ${#PACKAGES[@]} packages: ${PACKAGES[*]}"
+paru -S --noconfirm --needed "${PACKAGES[@]}"
 
-echo "Installing/Updating cmake..."
-paru -S --noconfirm --needed cmake
-echo "Cmake installed successfully."
+log_success "All crucial applications installed."

@@ -1,43 +1,38 @@
 #!/bin/bash
 set -e
 
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+# ── Source shared library ─────────────────────────────────────────────────────
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPTS_DIR/lib.sh"
 
-echo "Starting setup..."
+log_section "AUR Helpers (yay & paru)"
 
-# 1. Install prerequisites (git and base-devel are required for building AUR packages)
-echo "Ensuring base-devel and git are installed..."
+# 1. Install prerequisites
+log_info "Ensuring base-devel and git are installed..."
 sudo pacman -S --needed --noconfirm git base-devel
 
-# 2. Install yay (if not present)
+# 2. Install yay
 if command_exists yay; then
-    echo "yay is already installed. Skipping..."
+    log_success "yay is already installed. Skipping."
 else
-    echo "Installing yay..."
-    rm -rf yay
-    git clone https://aur.archlinux.org/yay.git
-    cd yay
-    makepkg -si --noconfirm
-    cd ..
-    rm -rf yay
-    echo "yay installed successfully."
+    log_info "Installing yay..."
+    TEMP_DIR=$(mktemp -d)
+    trap 'rm -rf "$TEMP_DIR"' EXIT
+    git clone https://aur.archlinux.org/yay.git "$TEMP_DIR/yay"
+    (cd "$TEMP_DIR/yay" && makepkg -si --noconfirm)
+    log_success "yay installed successfully."
 fi
 
-# 3. Install paru (if not present)
+# 3. Install paru
 if command_exists paru; then
-    echo "paru is already installed. Skipping..."
+    log_success "paru is already installed. Skipping."
 else
-    echo "Installing paru..."
-    rm -rf paru
-    git clone https://aur.archlinux.org/paru.git
-    cd paru
-    makepkg -si --noconfirm
-    cd ..
-    rm -rf paru
-    echo "paru installed successfully."
+    log_info "Installing paru..."
+    TEMP_DIR=$(mktemp -d)
+    trap 'rm -rf "$TEMP_DIR"' EXIT
+    git clone https://aur.archlinux.org/paru.git "$TEMP_DIR/paru"
+    (cd "$TEMP_DIR/paru" && makepkg -si --noconfirm)
+    log_success "paru installed successfully."
 fi
 
-echo "All done!"
+log_success "AUR helpers ready."

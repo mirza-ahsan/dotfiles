@@ -1,57 +1,138 @@
 #!/bin/bash
 set -e
 
-# Define the dotfiles root directory
-DOTFILES_DIR=$(pwd)
+# ── Resolve dotfiles root reliably (works no matter where you run this from) ──
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Starting Master Installation..."
+# ── Source shared library ─────────────────────────────────────────────────────
+source "$DOTFILES_DIR/scripts/lib.sh"
 
-# --- 1. System Prerequisites & Scripts ---
-echo "Running installation scripts..."
-chmod +x "$DOTFILES_DIR/scripts/"*.sh
+# ── Parse flags ───────────────────────────────────────────────────────────────
+LINK_ONLY=false
 
-# Run existing logic scripts
-bash "$DOTFILES_DIR/scripts/aur.sh"
-bash "$DOTFILES_DIR/scripts/crucial-apps.sh"
-bash "$DOTFILES_DIR/scripts/zsh.sh"
-bash "$DOTFILES_DIR/scripts/tmux.sh"
-bash "$DOTFILES_DIR/scripts/github.sh"
-
-# --- 2. Symlink Configs (File-by-File Mirroring) ---
-echo "Symlinking specific config files..."
-
-# This finds all files inside your dotfiles/config/
-# and mirrors their path inside ~/.config/
-find "$DOTFILES_DIR/config" -type f | while read -r file; do
-    # Get the relative path (e.g., hypr/overrides.conf)
-    rel_path=${file#$DOTFILES_DIR/config/}
-    target_path="$HOME/.config/$rel_path"
-
-    # Create the parent directory (e.g., ~/.config/hypr) if it doesn't exist
-    mkdir -p "$(dirname "$target_path")"
-
-    # Link the file (overwrite if exists, but don't touch other files in folder)
-    ln -sfn "$file" "$target_path"
-    echo "   Linked: ~/.config/$rel_path"
+for arg in "$@"; do
+    case "$arg" in
+        --link-only)
+            LINK_ONLY=true
+            ;;
+        --help|-h)
+            echo "Usage: ./master-installation.sh [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --link-only   Skip all package installations, only deploy symlinks"
+            echo "  --help, -h    Show this help message"
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $arg"
+            echo "Run with --help for usage information."
+            exit 1
+            ;;
+    esac
 done
 
-# --- 3. Symlink Home files (~/.*) ---
-echo "Symlinking home hidden files..."
+# ── Banner ────────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}${CYAN}"
+echo "  ┌──────────────────────────────────────┐"
+echo "  │       Dotfiles Master Installer       │"
+echo "  └──────────────────────────────────────┘"
+echo -e "${RESET}"
+log_info "Dotfiles directory: ${BOLD}$DOTFILES_DIR${RESET}"
+if $LINK_ONLY; then
+    log_warn "Running in ${BOLD}--link-only${RESET} mode. Skipping all installations."
+fi
+echo ""
 
-for item in "$DOTFILES_DIR/home/".*; do
+# ── Make all scripts executable ───────────────────────────────────────────────
+chmod +x "$DOTFILES_DIR/scripts/"*.sh
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PHASE 1: Package Installation (skipped with --link-only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+if ! $LINK_ONLY; then
+
+    # ── 1a. AUR Helpers ───────────────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/aur.sh"
+
+    # ── 1b. Crucial Applications ──────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/crucial-apps.sh"
+
+    # ── 1c. Neovim & Dependencies ─────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/nvim.sh"
+
+    # ── 1d. Zsh & Oh My Zsh ──────────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/zsh.sh"
+
+    # ── 1e. Tmux & TPM ───────────────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/tmux.sh"
+
+    # ── 1f. GitHub SSH Key ────────────────────────────────────────────────────
+    bash "$DOTFILES_DIR/scripts/github.sh"
+
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PHASE 2: Symlink Deployment
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── 2a. Config files: config/* → ~/.config/* (file-by-file mirroring) ─────────
+log_section "Symlinking config/ → ~/.config/"
+
+CONFIG_COUNT=0
+while IFS= read -r file; do
+    # Get the relative path (e.g., nvim/init.lua)
+    rel_path="${file#$DOTFILES_DIR/config/}"
+    target_path="$HOME/.config/$rel_path"
+
+    create_symlink "$file" "$target_path"
+    ((CONFIG_COUNT++))
+done < <(find "$DOTFILES_DIR/config" -type f)
+
+log_success "Linked ${BOLD}$CONFIG_COUNT${RESET} config files."
+
+# ── 2b. Home dotfiles: home/* → ~/* ──────────────────────────────────────────
+log_section "Symlinking home/ → ~/"
+
+HOME_COUNT=0
+for item in "$DOTFILES_DIR/home/"* "$DOTFILES_DIR/home/".*; do
+    # Skip if glob didn't match anything
     [ -e "$item" ] || continue
+
     target_name=$(basename "$item")
 
     # Skip . and ..
-    if [[ "$target_name" == "." || "$target_name" == ".." ]]; then
-        continue
-    fi
+    [[ "$target_name" == "." || "$target_name" == ".." ]] && continue
 
     target_path="$HOME/$target_name"
 
-    # Link the file directly to Home
-    ln -sfn "$item" "$target_path"
-    echo "   Linked: ~/$target_name"
+    create_symlink "$item" "$target_path"
+    ((HOME_COUNT++))
 done
 
-echo "Setup Complete!"
+log_success "Linked ${BOLD}$HOME_COUNT${RESET} home dotfiles."
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Done!
+# ══════════════════════════════════════════════════════════════════════════════
+
+echo ""
+echo -e "${BOLD}${GREEN}"
+echo "  ┌──────────────────────────────────────┐"
+echo "  │          Setup Complete! ✓            │"
+echo "  └──────────────────────────────────────┘"
+echo -e "${RESET}"
+
+log_info "Total symlinks: ${BOLD}$((CONFIG_COUNT + HOME_COUNT))${RESET} ($CONFIG_COUNT config + $HOME_COUNT home)"
+
+if [ -d "${BACKUP_DIR:-}" ] && [ "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
+    log_warn "Backed-up files are in: ${BOLD}$BACKUP_DIR${RESET}"
+fi
+
+echo ""
+log_info "Next steps:"
+echo "  1. Restart your terminal (or run: exec zsh)"
+echo "  2. Open tmux and press Ctrl+S, then I to install tmux plugins"
+echo "  3. If you generated an SSH key, add it to GitHub: https://github.com/settings/ssh/new"
+echo ""
