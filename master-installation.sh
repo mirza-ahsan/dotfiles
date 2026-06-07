@@ -87,7 +87,7 @@ while IFS= read -r file; do
     target_path="$HOME/.config/$rel_path"
 
     create_symlink "$file" "$target_path"
-    ((CONFIG_COUNT++))
+    ((++CONFIG_COUNT))
 done < <(find "$DOTFILES_DIR/config" -type f)
 
 log_success "Linked ${BOLD}$CONFIG_COUNT${RESET} config files."
@@ -108,7 +108,7 @@ for item in "$DOTFILES_DIR/home/"* "$DOTFILES_DIR/home/".*; do
     target_path="$HOME/$target_name"
 
     create_symlink "$item" "$target_path"
-    ((HOME_COUNT++))
+    ((++HOME_COUNT))
 done
 
 log_success "Linked ${BOLD}$HOME_COUNT${RESET} home dotfiles."
