@@ -9,7 +9,7 @@ UseTab:          Never
 AccessModifierOffset: -4
 
 # --- Formatting ---
-ColumnLimit:     100
+ColumnLimit:     110
 Standard:        c++17
 
 # --- Braces on New Line (Allman Style) ---
