@@ -57,13 +57,20 @@ return {
 		local capabilities = require("blink.cmp").get_lsp_capabilities()
 
 		-- Neovim 0.11+ Native LSP Configuration
-		local servers = { "clangd", "pylsp", "rust_analyzer", "ts_ls", "gopls", "lua_ls" }
+		local servers = { "pylsp", "rust_analyzer", "ts_ls", "gopls", "lua_ls" }
 		for _, server in ipairs(servers) do
 			vim.lsp.config(server, {
 				capabilities = capabilities,
 			})
 			vim.lsp.enable(server)
 		end
+
+		-- clangd: disable auto-inserting #include on completion
+		vim.lsp.config("clangd", {
+			capabilities = capabilities,
+			cmd = { "clangd", "--header-insertion=never" },
+		})
+		vim.lsp.enable("clangd")
 
 		-- Dart special case (uses your system's Dart SDK)
 		vim.lsp.config("dartls", {
